@@ -1,0 +1,106 @@
+mql5
+// Developer: Forex Robot Easy Team
+// Developer's Site: forexroboteasy.com
+
+#property strict
+
+// Define session settings
+struct SessionSettings
+{
+    string zime;  // Session start and end time
+    color color;  // Bar color for the session
+    double high;  // High value for the session
+    double low;   // Low value for the session
+};
+
+// Define session colors
+enum SessionColor
+{
+    ASIA_COLOR = clrRed,
+    LONDON_COLOR = clrGreen,
+    US_COLOR = clrBlue
+};
+
+// Define session settings for each trading session
+SessionSettings asiaSession = {'00:00-08:00', ASIA_COLOR, 1.1000, 1.1050};
+SessionSettings londonSession = {'08:00-16:00', LONDON_COLOR, 1.1050, 1.1100};
+SessionSettings usSession = {'16:00-24:00', US_COLOR, 1.1100, 1.1150};
+
+// Function to color bars based on trading sessions
+void ColorBarsBySession()
+{
+    datetime startTime;
+    datetime endTime;
+    
+    // Loop through each bar
+    for (int i = 0; i < Bars; i++)
+    {
+        // Get bar timestamp
+        datetime barTime = iTime(_Symbol, PERIOD_H1, i);
+        
+        // Determine the trading session for the bar
+        if (TimeInSession(barTime, asiaSession.zime))
+        {
+            startTime = StrToTime(StringSubstr(asiaSession.zime, 0, 5));
+            endTime = StrToTime(StringSubstr(asiaSession.zime, 6, 5));
+            SetBarColor(i, asiaSession.color);
+            SetBarHigh(i, asiaSession.high);
+            SetBarLow(i, asiaSession.low);
+        }
+        else if (TimeInSession(barTime, londonSession.zime))
+        {
+            startTime = StrToTime(StringSubstr(londonSession.zime, 0, 5));
+            endTime = StrToTime(StringSubstr(londonSession.zime, 6, 5));
+            SetBarColor(i, londonSession.color);
+            SetBarHigh(i, londonSession.high);
+            SetBarLow(i, londonSession.low);
+        }
+        else if (TimeInSession(barTime, usSession.zime))
+        {
+            startTime = StrToTime(StringSubstr(usSession.zime, 0, 5));
+            endTime = StrToTime(StringSubstr(usSession.zime, 6, 5));
+            SetBarColor(i, usSession.color);
+            SetBarHigh(i, usSession.high);
+            SetBarLow(i, usSession.low);
+        }
+    }
+}
+
+// Function to check if given time is within the trading session
+bool TimeInSession(datetime barTime, string sessionTime)
+{
+    int sessionStartHour = StrToInteger(StringSubstr(sessionTime, 0, 2));
+    int sessionStartMinute = StrToInteger(StringSubstr(sessionTime, 3, 2));
+    int sessionEndHour = StrToInteger(StringSubstr(sessionTime, 6, 2));
+    int sessionEndMinute = StrToInteger(StringSubstr(sessionTime, 9, 2));
+    
+    datetime sessionStartTime = TimeHour(TimeCurrent()) + sessionStartHour * 60 + sessionStartMinute;
+    datetime sessionEndTime = TimeHour(TimeCurrent()) + sessionEndHour * 60 + sessionEndMinute;
+    
+    return (barTime >= sessionStartTime && barTime < sessionEndTime);
+}
+
+// Function to set the bar color
+void SetBarColor(int barIndex, color barColor)
+{
+    PlotIndexSetInteger(0, PLOT_COLOR, barIndex, barColor);
+}
+
+// Function to set the bar high
+void SetBarHigh(int barIndex, double barHigh)
+{
+    PlotIndexSetDouble(1, PLOT_HIGH, barIndex, barHigh);
+}
+
+// Function to set the bar low
+void SetBarLow(int barIndex, double barLow)
+{
+    PlotIndexSetDouble(2, PLOT_LOW, barIndex, barLow);
+}
+
+// Entry point of the program
+void OnStart()
+{
+    // Color bars by session
+    ColorBarsBySession();
+}
